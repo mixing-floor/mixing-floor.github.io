@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Compute Floor of Data Mixing</title>
+  <meta name="description" content="Six data-mixing methods on a provenance-split pool: loss-monotone reweighters drain easy synthetic text at 160M parameters, and the split becomes seed-dominated below about 10^16 FLOPs. MOSS Workshop at COLM 2026.">
+  <meta name="author" content="Shayan Salehi, Iman Mohammadi">
+  <meta name="theme-color" content="#fbfaf6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://mixing-floor.github.io/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Compute Floor of Data Mixing">
+  <meta property="og:description" content="When loss-based reweighters start to drain easy synthetic text. MOSS Workshop at COLM 2026.">
+  <meta property="og:url" content="https://mixing-floor.github.io/">
+  <meta property="og:image" content="https://mixing-floor.github.io/assets/img/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <meta name="citation_title" content="The Compute Floor of Data Mixing: When Loss-Based Reweighters Start to Drain Easy Synthetic Text">
+  <meta name="citation_author" content="Salehi, Shayan">
+  <meta name="citation_author_institution" content="University of Waterloo">
+  <meta name="citation_author" content="Mohammadi, Iman">
+  <meta name="citation_author_institution" content="University of California, Irvine">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="MOSS Workshop at the Conference on Language Modeling (COLM)">
+  <meta name="citation_pdf_url" content="https://mixing-floor.github.io/assets/paper/compute-floor-moss2026.pdf">
+
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <script>
+    document.documentElement.classList.remove("no-js");
+    try {
+      var t = localStorage.getItem("mf-theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "The Compute Floor of Data Mixing: When Loss-Based Reweighters Start to Drain Easy Synthetic Text",
+    "author": [
+      {"@type": "Person", "name": "Shayan Salehi", "affiliation": "University of Waterloo"},
+      {"@type": "Person", "name": "Iman Mohammadi", "affiliation": "University of California, Irvine"}
+    ],
+    "datePublished": "2026",
+    "isPartOf": "MOSS Workshop at COLM 2026",
+    "url": "https://mixing-floor.github.io/",
+    "codeRepository": "https://github.com/mixing-floor/compute-floor"
+  }
+  </script>
+</head>
+<body>
+
+<a class="sr-only" href="#abstract">Skip to content</a>
+
+<header class="topbar" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="mixing-floor, back to top">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 6.5h18M3 10.5h18" stroke="currentColor" stroke-width="1.2" opacity=".35"/>
+        <path d="M3 14.5h18" stroke="currentColor" stroke-width="2"/>
+        <path d="M3 18.5h18" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2.2" opacity=".55"/>
+      </svg>
+      mixing-floor
+    </a>
+    <nav class="toc" aria-label="Sections">
+      <a href="#abstract">Abstract</a>
+      <a href="#protocol">Protocol</a>
+      <a href="#results">Results</a>
+      <a href="#floor">Compute floor</a>
+      <a href="#mechanism">Mechanism</a>
+      <a href="#reproduce">Reproduce</a>
+      <a href="#cite">Cite</a>
+    </nav>
+    <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle dark mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ═════════════ HERO ═════════════ -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow reveal" style="--i:0">MOSS Workshop <span class="dot"></span> COLM 2026</div>
+          <h1 class="title reveal" style="--i:1">The Compute Floor of <em>Data&nbsp;Mixing</em></h1>
+          <p class="subtitle reveal" style="--i:2">When loss-based reweighters start to drain easy synthetic text</p>
+
+          <div class="reveal" style="--i:3">
+            <div class="authors">
+              <span>Shayan Salehi<sup>1</sup></span>
+              <span>Iman Mohammadi<sup>2</sup></span>
+            </div>
+            <div class="affils">
+              <span><sup>1</sup>University of Waterloo</span>
+              <span><sup>2</sup>University of California, Irvine</span>
+            </div>
+          </div>
+
+          <div class="actions reveal" style="--i:4">
+            <a class="btn primary" href="assets/paper/compute-floor-moss2026.pdf">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+              Paper
+            </a>
+            <a class="btn" href="https://github.com/mixing-floor/compute-floor">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.7 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+              Code
+            </a>
+            <a class="btn" href="https://github.com/mixing-floor/compute-floor/tree/main/Results">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.5"/><path d="M4.5 5.5v13c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-13M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5"/></svg>
+              Results
+            </a>
+            <a class="btn" href="#cite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 7h4v4c0 3-1.5 5-4 6M15 7h4v4c0 3-1.5 5-4 6"/></svg>
+              BibTeX
+            </a>
+          </div>
+        </div>
+
+        <figure class="hero-fig reveal" style="--i:3" aria-label="Animated chart: synthetic share of six methods over reweighting rounds at the HEAVY budget">
+          <div class="fig-head"><span><b>Synthetic share</b> per round</span><span class="mono" style="white-space:nowrap">pythia-160m · 3 seeds</span></div>
+          <div class="chart" id="hero-chart"></div>
+          <figcaption>Every method starts at 0.50. The loss-monotone family (warm) drains the synthetic text; the interaction and gradient estimators (cool) stay near uniform.</figcaption>
+        </figure>
+      </div>
+
+      <div class="stats reveal">
+        <div class="stat">
+          <div class="v">0.50<span class="arrow">→</span>0.20</div>
+          <div class="k"><i style="background:var(--m-gdro)"></i>Group-DRO, final synthetic share</div>
+        </div>
+        <div class="stat">
+          <div class="v">0.50<span class="arrow">→</span>0.37</div>
+          <div class="k"><i style="background:var(--m-doremi)"></i>DoReMi-style, final synthetic share</div>
+        </div>
+        <div class="stat">
+          <div class="v">≈ 10<sup style="font-size:.5em;vertical-align:.9em">16</sup></div>
+          <div class="k">FLOPs per run: the compute floor above which the split reads cleanly</div>
+        </div>
+        <div class="stat">
+          <div class="v">1 GPU</div>
+          <div class="k">2.30 × 10<sup>17</sup> FLOPs per HEAVY run, a few GPU-hours per seed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ ABSTRACT ═════════════ -->
+  <section class="section" id="abstract">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 01</span><h2 class="sec-title">Abstract</h2></div>
+      <div class="sec-body prose reveal">
+        <p class="lede">Automatic data-mixing methods get benchmarked with pretraining sweeps from 70M up to billions of parameters, a budget so large it buries even the question of how the methods differ. One behavioral difference turns out to be readable on the cheap, and there is a compute floor below which it goes seed-dominated.</p>
+        <p>Take a pool split by provenance: 9 real Pile subsets versus 9 synthetic instruction corpora. Each method sees the same per-domain loss signal, and we track how it shifts the synthetic share. At 160M parameters (<span class="num">2.30 × 10<sup>17</sup></span> FLOPs per run) the loss-monotone reweighters drain that share toward the harder real text (Group-DRO to <span class="num">0.20</span>, DoReMi-style to <span class="num">0.37</span>); the interaction and gradient estimators barely leave the <span class="num">0.50</span> start, holding across three seeds, since a training-induced gap marks real as the high-loss provenance.</p>
+        <p>Two cheaper tiers pin down the floor. The split survives at <span class="num">10<sup>16</sup></span> FLOPs but goes seed-dominated at the <span class="num">10<sup>14</sup></span> smoke-test tier, where Group-DRO shows no net direction and DoReMi-style reverses. Held-out test loss, hedged at <span class="num">n = 3</span> and confounded by online training, gives the least-moving method, Aioli, the lowest mean. Every artifact is released at <a href="https://github.com/mixing-floor/compute-floor">github.com/mixing-floor/compute-floor</a>; read the protocol as a diagnostic of which mixture a policy picks.</p>
+      </div>
+
+      <div class="sec-body reveal" style="margin-top:2.25rem">
+        <ol class="findings">
+          <li><div><h3>Two families, read off one number.</h3><p>Given the identical loss signal, loss-monotone reweighters cut the synthetic share; Aioli, DoGE and Skill-It hold it near 0.50. The split is tight across all three seeds.</p></div></li>
+          <li><div><h3>The trajectory decides, not the optimizer.</h3><p>At round 0 the provenances are tied (2.94 vs 2.90 nats). Online training opens a gap of about one nat, real 4.09 vs synthetic 3.06, and a score that rises with own loss must chase it.</p></div></li>
+          <li><div><h3>A floor, three orders below a frontier run.</h3><p>The split already holds at 1.2 × 10<sup>16</sup> FLOPs on pythia-70m and is seed-dominated at 2.5 × 10<sup>14</sup>. Below the floor, report a run as inconclusive, not as a null.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ PROTOCOL ═════════════ -->
+  <section class="section" id="protocol">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 02</span><h2 class="sec-title">Protocol: freeze the signal, vary the rule</h2></div>
+      <div class="sec-body">
+        <div class="prose reveal">
+          <p>Every method runs the identical protocol, so the only variable across runs is the method itself. Mixing is sampling: each step draws a batch by <span class="num">multinomial(batch, p)</span> over 18 domains, and every online method moves <em>p</em> off one signal, per-domain validation loss. We log <em>p</em> each round and read off the mass on the synthetic domains.</p>
+        </div>
+
+        <div class="pool reveal" id="pool">
+          <div class="pool-col">
+            <h3><i style="background:var(--p-real)"></i>Real <small>9 Pile subsets</small></h3>
+            <div class="chips" id="chips-real"></div>
+            <div class="template">raw text, no template</div>
+          </div>
+          <div class="pool-mid" aria-hidden="true">
+            <span class="big">p</span>
+            <span>start<br>0.50 / 0.50</span>
+          </div>
+          <div class="pool-col">
+            <h3><i style="background:var(--p-synth)"></i>Synthetic <small>9 instruction corpora</small></h3>
+            <div class="chips" id="chips-synth"></div>
+            <div class="template">### Instruction:
+{prompt}
+### Response:
+{response}</div>
+          </div>
+        </div>
+        <p class="figcap reveal" style="margin-left:0">The synthetic class is defined by instruction format rather than strictly by model generation: the slot labelled Self-Instruct holds the human-written Dolly-15k, and ShareGPT pairs human prompts with model responses.</p>
+
+        <div class="pipeline reveal">
+          <div class="step"><div class="k">01 · pool</div><div class="t">Split by provenance</div><div class="d">Disjoint train / val / test token blocks per domain, fixed split seed 1234.</div></div>
+          <div class="step"><div class="k">02 · signal</div><div class="t">One shared loss</div><div class="d">Per-domain validation loss is the only input every online method consumes.</div></div>
+          <div class="step"><div class="k">03 · update</div><div class="t">Multiplicative weights</div><div class="d">Each method differs only in the score <em>s<sub>i</sub></em> it exponentiates.</div></div>
+          <div class="step"><div class="k">04 · read-off</div><div class="t">Synthetic share</div><div class="d">Σ<sub>synth</sub> p<sub>i</sub> per round, plus the L<sub>2</sub> distance from uniform.</div></div>
+        </div>
+
+        <div class="families reveal">
+          <div class="fam">
+            <span class="tag">Family 1</span>
+            <h3>Loss-monotone</h3>
+            <p>The score rises with a domain's own (excess) loss, so the update is forced toward the higher-loss provenance.</p>
+            <div class="members" data-members="Group-DRO,DoReMi-style"></div>
+            <div class="eq" data-tex="s_i=\ell_i-\tfrac{1}{k}\textstyle\sum_j \ell_j"></div>
+          </div>
+          <div class="fam">
+            <span class="tag">Family 2</span>
+            <h3>Interaction &amp; gradient</h3>
+            <p>The score asks how much training on a domain lowers loss elsewhere: Aioli's mixing-law column sums, DoGE's gradient alignment.</p>
+            <div class="members" data-members="Aioli,DoGE"></div>
+            <div class="eq" data-tex="s_j=\textstyle\sum_i A_{ij}\quad\text{or}\quad\big\langle\nabla\ell_j,\textstyle\sum_i\nabla\ell_i\big\rangle"></div>
+          </div>
+          <div class="fam">
+            <span class="tag">Hybrid &amp; control</span>
+            <h3>Skill-It, Stratified</h3>
+            <p>Skill-It routes loss through a learned skills graph and reshuffles within each provenance. Stratified (p = 1/k) never moves.</p>
+            <div class="members" data-members="Skill-It,Stratified"></div>
+            <div class="eq" data-tex="w_i\propto w_i\exp\!\big(\eta\textstyle\sum_j A_{ij}\,\ell_j\big)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ RESULTS EXPLORER ═════════════ -->
+  <section class="section" id="results">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 03</span><h2 class="sec-title">Turn the compute dial</h2></div>
+      <div class="sec-body">
+        <div class="prose reveal">
+          <p>The same six methods, the same pool, at three budgets. At HEAVY and LIGHT the family split is clean. At SUPER_LIGHT it falls apart: Group-DRO points nowhere on net and DoReMi-style climbs to 0.75.</p>
+        </div>
+
+        <figure class="figure reveal" id="explorer">
+          <div class="dial" role="group" aria-label="Compute tier" id="dial"></div>
+          <div class="panel">
+            <div class="controls">
+              <span class="ctrl-label">Metric</span>
+              <div class="seg" role="group" aria-label="Metric" id="metric-seg">
+                <button type="button" data-metric="share" aria-pressed="true">Synthetic share</button>
+                <button type="button" data-metric="l2" aria-pressed="false">L<sub>2</sub> from uniform</button>
+              </div>
+              <span class="spacer"></span>
+              <button type="button" class="linkbtn" data-table-toggle="explorer-table">View as table</button>
+            </div>
+            <div class="chart" id="explorer-chart"></div>
+            <div class="legend" id="explorer-legend" aria-label="Methods (click to show or hide)"></div>
+            <div class="data-table table-wrap" id="explorer-table" hidden></div>
+          </div>
+          <figcaption class="figcap"><span class="fig-label">Fig. 1</span>Mean over seeds 0, 1, 2 with ±1σ bands; hover for values, click a method to hide it. <b>Synthetic share</b> is Σ p over the 9 synthetic domains (uniform start 0.50). <b>L<sub>2</sub> from uniform</b> counts how much mass moves regardless of direction: Skill-It ranks second at HEAVY (0.111) while its share barely moves, because it reshuffles within each provenance class.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ COMPUTE FLOOR ═════════════ -->
+  <section class="section" id="floor">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 04</span><h2 class="sec-title">Where the floor sits</h2></div>
+      <div class="sec-body">
+        <div class="prose reveal">
+          <p>The floor is the lowest budget at which the loss-monotone methods agree in direction across seeds. Group-DRO's three LIGHT seeds land in <span class="num">[0.234, 0.239]</span>; at SUPER_LIGHT they scatter to <span class="num">0.996</span>, <span class="num">0.253</span> and <span class="num">0.262</span>. Both cheaper tiers run pythia-70m, so the floor is a budget effect at fixed model size, not a size effect.</p>
+        </div>
+
+        <figure class="figure reveal">
+          <div class="two-up">
+            <div class="panel">
+              <div class="panel-title"><span class="pl">(a)</span> Final synthetic share vs. compute</div>
+              <div class="panel-sub">Mean ± 1σ; small marks are individual seeds</div>
+              <div class="chart" id="floor-chart"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title"><span class="pl">(b)</span> Seed spread collapses with budget</div>
+              <div class="panel-sub">Std of the final synthetic share over seeds</div>
+              <div class="chart" id="spread-chart"></div>
+            </div>
+          </div>
+          <div class="legend" id="floor-legend"></div>
+          <figcaption class="figcap"><span class="fig-label">Fig. 2</span>The hatched band marks the interval in which the floor lies: we run no budget between <span class="num">2.5 × 10<sup>14</sup></span> and <span class="num">1.2 × 10<sup>16</sup></span>, so we place it there rather than at a point. Below it the loss-monotone direction is unreliable, through incoherent scatter (Group-DRO) or a coherent reversal (DoReMi-style, all three seeds up). <button type="button" class="linkbtn" data-table-toggle="floor-table">View as table</button></figcaption>
+          <div class="data-table table-wrap" id="floor-table" hidden></div>
+        </figure>
+
+        <div class="callout reveal">Vetting a new reweighter: run it beside Stratified and Group-DRO on a provenance-split pool at the LIGHT budget or above, over three seeds, about 1.1 × 10<sup>17</sup> FLOPs in all. A share that falls with Group-DRO's, as tightly, marks a loss-monotone policy.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ MECHANISM ═════════════ -->
+  <section class="section" id="mechanism">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 05</span><h2 class="sec-title">Loss is not value</h2></div>
+      <div class="sec-body">
+        <div class="prose reveal">
+          <p>What separates the families is how much the update's score leans on a domain's own loss. All six methods share one exponentiated-gradient update on the simplex and differ only in the score they feed it:</p>
+        </div>
+        <div class="math-block reveal"><span class="tag">Shared update</span><div data-tex-display="p_i^{(t+1)}\;\propto\;p_i^{(t)}\,\exp\!\big(\eta\,s_i^{(t)}\big)"></div></div>
+        <div class="prose reveal">
+          <p>A loss-monotone score is forced toward the highest-loss provenance; an interaction or gradient score is not, because its move depends on cross-domain transfer, not on <em>ℓ</em>. Which provenance is higher-loss is an empirical input, and it fixes the direction of mass flow:</p>
+        </div>
+        <div class="math-block reveal"><span class="tag">A-priori prediction</span><div data-tex-display="\operatorname{sign}\big(\Delta\,\text{real share}\big)=\operatorname{sign}\big(\overline{\ell}_{\mathrm{real}}-\overline{\ell}_{\mathrm{synth}}\big)\quad\text{for loss-monotone }s_i"></div></div>
+
+        <figure class="figure reveal">
+          <div class="panel">
+            <div class="controls">
+              <span class="panel-title" style="margin:0">Per-provenance validation loss, Aioli run</span>
+              <span class="spacer"></span>
+              <button type="button" class="linkbtn" data-table-toggle="val-table">View as table</button>
+            </div>
+            <div class="chart" id="val-chart"></div>
+            <div class="data-table table-wrap" id="val-table" hidden></div>
+          </div>
+          <figcaption class="figcap"><span class="fig-label">Fig. 3</span>Line is the class mean over 9 domains and 3 seeds, band the per-class min to max. At the base checkpoint the classes are tied; the gap opens inside the first adaptation round and settles near one nat, consistent with forgetting on the small fixed real shards. The split is systematic, not strict: Github (real, 2.90) sits below Self-Instruct (synthetic, 4.03).</figcaption>
+        </figure>
+
+        <div class="prose reveal">
+          <p>Decompose a domain's loss as <span data-tex="\ell_i=H_i+(\ell_i-H_i)"></span>, irreducible entropy plus a reducible gap. A raw-loss method cannot separate the two terms, so it chases whichever provenance carries the higher loss whether or not that loss is reducible. DoReMi's excess-loss centering is the standard fix, which is why it moves less than raw Group-DRO. DoGE's inner product carries a self term <span data-tex="\lVert\nabla\ell_j\rVert^2"></span>, so its near-uniform behaviour holds because cross terms dominate on this pool, not by construction.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ WEIGHTS ═════════════ -->
+  <section class="section" id="weights">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 06</span><h2 class="sec-title">Where the mass goes</h2></div>
+      <div class="sec-body">
+        <div class="prose reveal">
+          <p>It is not provenance the loss-movers chase but loss. Group-DRO piles onto high-loss real domains (Pile-CC <span class="num">0.164</span>, OpenWebText2 <span class="num">0.150</span>) and starves easy synthetic ones (Code-Alpaca <span class="num">0.004</span>), yet also trims low-loss real domains such as Github and ArXiv. Aioli stays in a tight band around uniform.</p>
+        </div>
+        <figure class="figure reveal">
+          <div class="panel">
+            <div class="controls">
+              <span class="panel-title" style="margin:0">Final per-domain weight relative to uniform (1/18), HEAVY</span>
+              <span class="spacer"></span>
+              <button type="button" class="linkbtn" data-table-toggle="heat-table">View as table</button>
+            </div>
+            <div class="chart" id="heat-chart"></div>
+            <div class="data-table table-wrap" id="heat-table" hidden></div>
+          </div>
+          <figcaption class="figcap"><span class="fig-label">Fig. 4</span>Mean over seeds. Cell colour is log<sub>2</sub>(w / uniform), clipped to ¼× … 4×; grey is uniform. Hover a cell for the weight ± std.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ QUALITY ═════════════ -->
+  <section class="section" id="quality">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 07</span><h2 class="sec-title">Held-out test loss, hedged</h2></div>
+      <div class="sec-body">
+        <div class="two-up reveal" style="align-items:start">
+          <figure class="figure" style="margin-top:0">
+            <div class="panel">
+              <div class="panel-title">Aggregate test loss over 18 domains, HEAVY</div>
+              <div class="panel-sub">Mean ± 1σ (bar), seeds 0, 1, 2 (rings); lower is better</div>
+              <div class="chart" id="test-chart"></div>
+            </div>
+          </figure>
+          <div class="prose">
+            <p>Aioli has the lowest mean, <span class="num">3.60</span> nats, and beats DoGE and Skill-It on every seed. Against Stratified, DoReMi-style and Group-DRO it lands within seed scatter, and no aggressive loss-mover pulls ahead of the uniform control by more than that scatter.</p>
+            <p class="muted small">With <span class="num">n = 3</span> this describes average behaviour, not an ordering: models are scored after online training rather than a clean static retrain, so mixture choice is confounded with online dynamics and with Aioli's probe-driven trajectory. The runner's <code class="mono">--static-eval</code> path removes that confound.</p>
+            <div class="table-wrap"><table id="test-table"></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ BUDGET ═════════════ -->
+  <section class="section" id="budget">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 08</span><h2 class="sec-title">Budget and faithfulness</h2></div>
+      <div class="sec-body reveal">
+        <div class="table-wrap">
+          <table>
+            <caption>FLOPs per run ≈ 6ND, N total parameters, D = max_steps · batch · ctx. Counting total rather than non-embedding parameters overshoots, so read each budget as a ceiling.</caption>
+            <thead><tr><th>Tier</th><th>Model</th><th class="n">ctx</th><th class="n">batch</th><th class="n">max steps</th><th class="n">tokens / run</th><th class="n">FLOPs / run</th><th class="n">Group-DRO share</th><th class="n">DoReMi share</th></tr></thead>
+            <tbody id="budget-body"></tbody>
+          </table>
+        </div>
+        <p class="small muted" style="margin-top:.8rem">DoGE and Skill-It add one-time estimation surcharges over the HEAVY base: <span class="num">2.37 × 10<sup>17</sup></span> (+3%) and <span class="num">2.87 × 10<sup>17</sup></span> (+25%). The full headline study, 6 methods × 3 seeds, is about <span class="num">4.3 × 10<sup>18</sup></span> FLOPs, each run roughly 435× under a 10<sup>20</sup>-per-run ceiling. All runs used one NVIDIA A100 (80 GB).</p>
+
+        <div class="table-wrap" style="margin-top:2.25rem">
+          <table>
+            <caption>Honest labels. DoGE and Skill-It refer only to faithful implementations; the older validation-loss heuristics live behind a flag and are never given those names.</caption>
+            <thead><tr><th>Method</th><th>Status</th><th>Deviations from the original</th></tr></thead>
+            <tbody>
+              <tr><td><span class="swatch" style="background:var(--m-aioli)"></span>Aioli</td><td>faithful port</td><td>HEAVY uses a stateful EMA (0.1) path instead of the reference's stateless reset</td></tr>
+              <tr><td><span class="swatch" style="background:var(--m-doge)"></span>DoGE</td><td>faithful, Alg. 1</td><td>online single model, per-round estimation, mean-abs score scaling</td></tr>
+              <tr><td><span class="swatch" style="background:var(--m-skillit)"></span>Skill-It</td><td>faithful, Alg. 1</td><td>continual-pretraining regime, uniform init, mean-abs scaling</td></tr>
+              <tr><td><span class="swatch" style="background:var(--m-doremi)"></span>DoReMi-style</td><td>approximate</td><td>validation-shard loss; no max(0,·) clip or c = 10<sup>−3</sup> smoothing; frozen pretrained reference</td></tr>
+              <tr><td><span class="swatch" style="background:var(--m-gdro)"></span>Group-DRO</td><td>approximate</td><td>high-loss upweighting kept; joint min-max model step omitted</td></tr>
+              <tr><td><span class="swatch" style="background:var(--m-strat)"></span>Stratified</td><td>exact</td><td>uniform control, p = 1/k</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ REPRODUCE ═════════════ -->
+  <section class="section" id="reproduce">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 09</span><h2 class="sec-title">Reproduce it</h2></div>
+      <div class="sec-body reveal" style="max-width:52rem">
+        <p class="prose">One self-contained runner regenerates every reported number. Data streams from the Hugging Face Hub; models continue from pretrained Pythia checkpoints.</p>
+        <div class="code-label">Setup</div>
+        <div class="code"><button class="copy" type="button">Copy</button><pre><span class="k">git</span> clone https://github.com/mixing-floor/compute-floor.git
+<span class="k">cd</span> compute-floor
+<span class="k">pip</span> install -r requirements.txt</pre></div>
+        <div class="code-label">Smoke test · minutes</div>
+        <div class="code"><button class="copy" type="button">Copy</button><pre><span class="k">python</span> Code/run_experiment.py --config SUPER_LIGHT --seeds 0 --scenario S2_9R_9S --eval-test --out-dir runs/main</pre></div>
+        <div class="code-label">Reported run · HEAVY, 3 seeds</div>
+        <div class="code"><button class="copy" type="button">Copy</button><pre><span class="k">python</span> Code/run_experiment.py --config HEAVY --seeds 0 1 2 --scenario S2_9R_9S --eval-test --out-dir runs/main
+<span class="k">python</span> Code/visualize_results.py --out-dir runs/main --fig-dir runs/figures</pre></div>
+        <p class="small muted">Compare your <code class="mono">runs/main</code> against the released <a href="https://github.com/mixing-floor/compute-floor/tree/main/Results/main"><code class="mono">Results/main</code></a>. Signal-level diagnostics that log DoGE's gradient inner products, Skill-It's influence graph and Aioli's interaction blocks are in <a href="https://github.com/mixing-floor/compute-floor/tree/main/Results/diagnostics"><code class="mono">Results/diagnostics</code></a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ LIMITATIONS ═════════════ -->
+  <section class="section" id="limits">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 10</span><h2 class="sec-title">What this does not show</h2></div>
+      <div class="sec-body limits reveal">
+        <div><h3>Behaviour, not quality</h3><p>The protocol records which mixture each policy picks. No downstream task metric is reported, and no method is claimed to train a better model.</p></div>
+        <div><h3>Online, not static</h3><p>Test loss is measured after online training, which tangles mixture choice with training dynamics. A static retrain on each final mixture would settle it.</p></div>
+        <div><h3>One scenario, small n</h3><p>Scenario S2 at three seeds. The split and L<sub>2</sub> ordering are tight apart from DoGE, which wanders from 0.453 to 0.557 between seeds.</p></div>
+        <div><h3>Provenance ⇄ template</h3><p>The synthetic class is defined by instruction format, so provenance and template are confounded. Whether the split survives past 160M, or vanishes on an all-real pool as predicted, is open.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ CITE ═════════════ -->
+  <section class="section" id="cite">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="sec-num">§ 11</span><h2 class="sec-title">Citation</h2></div>
+      <div class="sec-body reveal" style="max-width:52rem">
+        <div class="code"><button class="copy" type="button">Copy</button><pre>@inproceedings{salehi2026computefloor,
+  title     = {The Compute Floor of Data Mixing: When Loss-Based
+               Reweighters Start to Drain Easy Synthetic Text},
+  author    = {Salehi, Shayan and Mohammadi, Iman},
+  booktitle = {MOSS Workshop at the Conference on Language Modeling (COLM)},
+  year      = {2026},
+  url       = {https://mixing-floor.github.io}
+}</pre></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <h4>The Compute Floor of Data Mixing</h4>
+      <p style="margin:0 0 .5rem">Shayan Salehi · Iman Mohammadi<br>MOSS Workshop at COLM 2026</p>
+      <p style="margin:0">We thank the Aioli authors for releasing their reference implementation, and EleutherAI for the open Pythia checkpoints.</p>
+    </div>
+    <div>
+      <h4>Artifacts</h4>
+      <ul>
+        <li><a href="assets/paper/compute-floor-moss2026.pdf">Paper (PDF)</a></li>
+        <li><a href="https://github.com/mixing-floor/compute-floor">Code</a></li>
+        <li><a href="https://github.com/mixing-floor/compute-floor/tree/main/Results">Released results</a></li>
+        <li><a href="assets/data/results.json">Data behind this page</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Elsewhere</h4>
+      <ul>
+        <li><a href="https://github.com/mixing-floor">github.com/mixing-floor</a></li>
+        <li><a href="https://github.com/mixing-floor/compute-floor/issues">Questions &amp; issues</a></li>
+        <li>Code under the MIT License</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
