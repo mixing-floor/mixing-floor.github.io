@@ -19,6 +19,8 @@
   ];
   const TIER_ORDER = ["SUPER_LIGHT", "LIGHT", "HEAVY"];
   const TIER_NOTE = { SUPER_LIGHT: "below floor", LIGHT: "split holds", HEAVY: "reported" };
+  // the paper names the tiers Minimal, Intermediate and Full; the runner's --config keeps the code names
+  const TIER_NAME = { SUPER_LIGHT: "Minimal", LIGHT: "Intermediate", HEAVY: "Full" };
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const col = (m) => `var(${METHODS[m].v})`;
@@ -183,14 +185,14 @@
         const rows = series.map((s) => ({ m: s.m, p: s.pts.find((p) => p.x === r) })).filter((d) => d.p).sort((a, b) => b.p.y - a.p.y);
         sg.selectAll(".mk").attr("opacity", (p) => (p.x === r ? 1 : 0.35));
         const fmt = metric === "share" ? f3 : f3;
-        tip.show(`<div class="tt-h">${opt.tier.replace("_", " ")} · round ${r}</div>` +
+        tip.show(`<div class="tt-h">${TIER_NAME[opt.tier]} · round ${r}</div>` +
           rows.map((d) => ttRow(d.m, `${fmt(d.p.y)} <small>± ${fmt(d.p.sd)}</small>`)).join("") +
           (rows.length < series.length ? `<div class="tt-h" style="margin:.35rem 0 0">others logged fewer rounds</div>` : ""), x(r), d3.pointer(ev)[1]);
       })
       .on("pointerleave", () => { cross.attr("opacity", 0); sg.selectAll(".mk").attr("opacity", 1); tip.hide(); });
 
     svg.attr("role", "img").attr("aria-label",
-      `${metric === "share" ? "Synthetic share" : "L2 distance from uniform"} by round at ${opt.tier}: ` +
+      `${metric === "share" ? "Synthetic share" : "L2 distance from uniform"} by round at the ${TIER_NAME[opt.tier]} tier: ` +
       series.map((s) => `${s.m} ends at ${f3(s.pts[s.pts.length - 1].y)}`).join(", "));
   }
 
@@ -229,7 +231,7 @@
       const b = document.createElement("button");
       b.type = "button";
       b.setAttribute("aria-pressed", String(state.tier === t));
-      b.innerHTML = `<span class="t">${t.replace("_", " ")}</span><span class="f">${sci(td.flops, t === "HEAVY" ? 2 : 1)}</span><span class="m">FLOPs / run · ${td.model}</span><span class="verdict ${t === "SUPER_LIGHT" ? "below" : ""}">${TIER_NOTE[t]}</span>`;
+      b.innerHTML = `<span class="t">${TIER_NAME[t]}</span><span class="f">${sci(td.flops, t === "HEAVY" ? 2 : 1)}</span><span class="m">FLOPs / run · ${td.model}</span><span class="verdict ${t === "SUPER_LIGHT" ? "below" : ""}">${TIER_NOTE[t]}</span>`;
       b.addEventListener("click", () => { state.tier = t; renderDial(); renderExplorer(true); });
       dial.appendChild(b);
     });
@@ -247,7 +249,7 @@
     const maxR = d3.max(ORDER, (m) => td.methods[m].rounds.length);
     const key = state.metric === "share" ? ["share", "share_sd"] : ["l2", "l2_sd"];
     document.getElementById("explorer-table").innerHTML =
-      `<table><caption>${state.metric === "share" ? "Synthetic share" : "L2 from uniform"}, ${state.tier}, mean ± std over 3 seeds</caption>` +
+      `<table><caption>${state.metric === "share" ? "Synthetic share" : "L2 from uniform"}, ${TIER_NAME[state.tier]} tier, mean ± std over 3 seeds</caption>` +
       `<thead><tr><th>Method</th>${d3.range(maxR).map((r) => `<th class="n">r${r}</th>`).join("")}</tr></thead><tbody>` +
       ORDER.map((m) => `<tr><td><span class="swatch" style="background:${col(m)}"></span>${m}</td>${d3.range(maxR).map((r) => {
         const p = td.methods[m].rounds[r];
@@ -312,9 +314,9 @@
       });
     });
     TIER_ORDER.forEach((t) => g.append("text").attr("class", "ref-label").attr("x", x(DATA.tiers[t].flops)).attr("y", H - M.b - 8).attr("text-anchor", "middle")
-      .style("font-family", "var(--mono)").style("font-size", "10px").text(t.replace("_", " ")));
+      .style("font-family", "var(--mono)").style("font-size", "10px").text(TIER_NAME[t].toUpperCase()));
     base.floorLabel();
-    floorHover(el, base, (t) => `<div class="tt-h">${t.replace("_", " ")} · ${sci(DATA.tiers[t].flops, 2)} FLOPs</div>` +
+    floorHover(el, base, (t) => `<div class="tt-h">${TIER_NAME[t]} · ${sci(DATA.tiers[t].flops, 2)} FLOPs</div>` +
       ORDER.map((m) => { const d = DATA.tiers[t].methods[m]; return ttRow(m, `${f2(d.final_share)} <small>± ${f2(d.final_share_sd)}</small>`); }).join(""));
     base.svg.attr("role", "img").attr("aria-label", "Final synthetic share against FLOPs per run for six methods at three compute tiers");
 
@@ -330,13 +332,13 @@
     const gd = DATA.tiers.SUPER_LIGHT.methods["Group-DRO"];
     b2.g.append("text").attr("class", "direct-label").attr("x", b2.x(DATA.tiers.SUPER_LIGHT.flops) + 10).attr("y", b2.y(gd.final_share_sd) + 4).text(`Group-DRO ${f2(gd.final_share_sd)}`);
     b2.floorLabel();
-    floorHover(el2, b2, (t) => `<div class="tt-h">${t.replace("_", " ")} · seed std</div>` +
+    floorHover(el2, b2, (t) => `<div class="tt-h">${TIER_NAME[t]} · seed std</div>` +
       ORDER.filter((m) => m !== "Stratified").map((m) => ttRow(m, f3(DATA.tiers[t].methods[m].final_share_sd))).join(""));
     b2.svg.attr("role", "img").attr("aria-label", "Seed standard deviation of the final synthetic share against FLOPs per run");
 
     legend(document.getElementById("floor-legend"), null);
     document.getElementById("floor-table").innerHTML =
-      `<table><caption>Final synthetic share, mean ± std, with per-seed values (seeds 0, 1, 2)</caption><thead><tr><th>Method</th>${TIER_ORDER.map((t) => `<th class="n">${t.replace("_", " ")}<br><span class="muted">${sci(DATA.tiers[t].flops, 1)}</span></th>`).join("")}</tr></thead><tbody>` +
+      `<table><caption>Final synthetic share, mean ± std, with per-seed values (seeds 0, 1, 2)</caption><thead><tr><th>Method</th>${TIER_ORDER.map((t) => `<th class="n">${TIER_NAME[t]}<br><span class="muted">${sci(DATA.tiers[t].flops, 1)}</span></th>`).join("")}</tr></thead><tbody>` +
       ORDER.map((m) => `<tr><td><span class="swatch" style="background:${col(m)}"></span>${m}</td>${TIER_ORDER.map((t) => {
         const d = DATA.tiers[t].methods[m];
         return `<td class="n">${f2(d.final_share)} ± ${f2(d.final_share_sd)}<br><span class="muted">${d.seed_share.map(f3).join(" · ")}</span></td>`;
@@ -500,7 +502,7 @@
     });
     document.getElementById("budget-body").innerHTML = TIER_ORDER.map((t) => {
       const d = DATA.tiers[t];
-      return `<tr${t === "HEAVY" ? ' class="hl"' : ""}><td class="mono">${t}${t === "HEAVY" ? ' <span class="muted">(reported)</span>' : ""}</td><td>${d.model}</td><td class="n">${d.ctx}</td><td class="n">${d.batch}</td><td class="n">${d3.format(",")(d.max_steps)}</td><td class="n">${sci(d.tokens, 2)}</td><td class="n">${sci(d.flops, 2)}</td><td class="n">${f2(d.methods["Group-DRO"].final_share)}</td><td class="n">${f2(d.methods["DoReMi-style"].final_share)}</td></tr>`;
+      return `<tr${t === "HEAVY" ? ' class="hl"' : ""}><td>${TIER_NAME[t]}${t === "HEAVY" ? ' <span class="muted">(reported)</span>' : ""}<br><span class="mono muted small">--config ${t}</span></td><td>${d.model}</td><td class="n">${d.ctx}</td><td class="n">${d.batch}</td><td class="n">${d3.format(",")(d.max_steps)}</td><td class="n">${sci(d.tokens, 2)}</td><td class="n">${sci(d.flops, 2)}</td><td class="n">${f2(d.methods["Group-DRO"].final_share)}</td><td class="n">${f2(d.methods["DoReMi-style"].final_share)}</td></tr>`;
     }).join("");
   }
 

@@ -128,7 +128,7 @@
           </div>
         </div>
 
-        <figure class="hero-fig reveal" style="--i:3" aria-label="Animated chart: synthetic share of six methods over reweighting rounds at the HEAVY budget">
+        <figure class="hero-fig reveal" style="--i:3" aria-label="Animated chart: synthetic share of six methods over reweighting rounds at the Full budget">
           <div class="fig-head"><span><b>Synthetic share</b> per round</span><span class="mono" style="white-space:nowrap">pythia-160m · 3 seeds</span></div>
           <div class="chart" id="hero-chart"></div>
           <figcaption>Every method starts at 0.50. The loss-monotone family (warm) drains the synthetic text; the interaction and gradient estimators (cool) stay near uniform.</figcaption>
@@ -150,7 +150,7 @@
         </div>
         <div class="stat">
           <div class="v">1 GPU</div>
-          <div class="k">2.30 × 10<sup>17</sup> FLOPs per HEAVY run, a few GPU-hours per seed</div>
+          <div class="k">2.30 × 10<sup>17</sup> FLOPs per Full-tier run, a few GPU-hours per seed</div>
         </div>
       </div>
     </div>
@@ -161,9 +161,9 @@
     <div class="wrap">
       <div class="sec-head reveal"><span class="sec-num">§ 01</span><h2 class="sec-title">Abstract</h2></div>
       <div class="sec-body prose reveal">
-        <p class="lede">Automatic data-mixing methods get benchmarked with pretraining sweeps from 70M up to billions of parameters, a budget so large it buries even the question of how the methods differ. One behavioral difference turns out to be readable on the cheap, and there is a compute floor below which it goes seed-dominated.</p>
-        <p>Take a pool split by provenance: 9 real Pile subsets versus 9 synthetic instruction corpora. Each method sees the same per-domain loss signal, and we track how it shifts the synthetic share. At 160M parameters (<span class="num">2.30 × 10<sup>17</sup></span> FLOPs per run) the loss-monotone reweighters drain that share toward the harder real text (Group-DRO to <span class="num">0.20</span>, DoReMi-style to <span class="num">0.37</span>); the interaction and gradient estimators barely leave the <span class="num">0.50</span> start, holding across three seeds, since a training-induced gap marks real as the high-loss provenance.</p>
-        <p>Two cheaper tiers pin down the floor. The split survives at <span class="num">10<sup>16</sup></span> FLOPs but goes seed-dominated at the <span class="num">10<sup>14</sup></span> smoke-test tier, where Group-DRO shows no net direction and DoReMi-style reverses. Held-out test loss, hedged at <span class="num">n = 3</span> and confounded by online training, gives the least-moving method, Aioli, the lowest mean. Every artifact is released at <a href="https://github.com/mixing-floor/compute-floor">github.com/mixing-floor/compute-floor</a>; read the protocol as a diagnostic of which mixture a policy picks.</p>
+        <p class="lede">Automatic data-mixing methods are usually evaluated with pretraining sweeps from 70M to billions of parameters, which leaves a basic question open: how much compute does it take to tell these methods apart?</p>
+        <p>We study this on a pool split by provenance, 9 real Pile subsets and 9 synthetic instruction corpora, where every method receives the same per-domain validation-loss signal and we record how it shifts the synthetic share of the mixture. At 160M parameters (<span class="num">2.30 × 10<sup>17</sup></span> FLOPs per run), the adaptive methods separate into two families across three seeds: loss-monotone reweighters move mass toward the harder real text (Group-DRO to a synthetic share of <span class="num">0.20</span>, DoReMi-style to <span class="num">0.37</span>), while interaction and gradient estimators stay near the <span class="num">0.50</span> start. The split follows a training-induced loss gap that makes real text the high-loss provenance.</p>
+        <p>Two cheaper tiers locate a compute floor: the split is already clear at <span class="num">1.2 × 10<sup>16</sup></span> FLOPs, but at <span class="num">2.5 × 10<sup>14</sup></span> FLOPs it becomes seed-dominated, with Group-DRO showing no net direction and DoReMi-style reversing. Held-out test loss gives the least-moving method, Aioli, the lowest mean, a result we hedge given <span class="num">n = 3</span> and the confound of online training. The protocol diagnoses which mixture a policy selects, not final model quality; all code and artifacts are released at <a href="https://github.com/mixing-floor/compute-floor">github.com/mixing-floor/compute-floor</a>.</p>
       </div>
 
       <div class="sec-body reveal" style="margin-top:2.25rem">
@@ -246,7 +246,7 @@
       <div class="sec-head reveal"><span class="sec-num">§ 03</span><h2 class="sec-title">Turn the compute dial</h2></div>
       <div class="sec-body">
         <div class="prose reveal">
-          <p>The same six methods, the same pool, at three budgets. At HEAVY and LIGHT the family split is clean. At SUPER_LIGHT it falls apart: Group-DRO points nowhere on net and DoReMi-style climbs to 0.75.</p>
+          <p>The same six methods, the same pool, at three budgets. At the Full and Intermediate tiers the family split is clean. At the Minimal tier it falls apart: Group-DRO points nowhere on net and DoReMi-style climbs to 0.75.</p>
         </div>
 
         <figure class="figure reveal" id="explorer">
@@ -265,7 +265,7 @@
             <div class="legend" id="explorer-legend" aria-label="Methods (click to show or hide)"></div>
             <div class="data-table table-wrap" id="explorer-table" hidden></div>
           </div>
-          <figcaption class="figcap"><span class="fig-label">Fig. 1</span>Mean over seeds 0, 1, 2 with ±1σ bands; hover for values, click a method to hide it. <b>Synthetic share</b> is Σ p over the 9 synthetic domains (uniform start 0.50). <b>L<sub>2</sub> from uniform</b> counts how much mass moves regardless of direction: Skill-It ranks second at HEAVY (0.111) while its share barely moves, because it reshuffles within each provenance class.</figcaption>
+          <figcaption class="figcap"><span class="fig-label">Fig. 1</span>Mean over seeds 0, 1, 2 with ±1σ bands; hover for values, click a method to hide it. <b>Synthetic share</b> is Σ p over the 9 synthetic domains (uniform start 0.50). <b>L<sub>2</sub> from uniform</b> counts how much mass moves regardless of direction: Skill-It ranks second at the Full tier (0.111) while its share barely moves, because it reshuffles within each provenance class.</figcaption>
         </figure>
       </div>
     </div>
@@ -277,7 +277,7 @@
       <div class="sec-head reveal"><span class="sec-num">§ 04</span><h2 class="sec-title">Where the floor sits</h2></div>
       <div class="sec-body">
         <div class="prose reveal">
-          <p>The floor is the lowest budget at which the loss-monotone methods agree in direction across seeds. Group-DRO's three LIGHT seeds land in <span class="num">[0.234, 0.239]</span>; at SUPER_LIGHT they scatter to <span class="num">0.996</span>, <span class="num">0.253</span> and <span class="num">0.262</span>. Both cheaper tiers run pythia-70m, so the floor is a budget effect at fixed model size, not a size effect.</p>
+          <p>The floor is the lowest budget at which the loss-monotone methods agree in direction across seeds. Group-DRO's three Intermediate-tier seeds land in <span class="num">[0.234, 0.239]</span>; at the Minimal tier they scatter to <span class="num">0.996</span>, <span class="num">0.253</span> and <span class="num">0.262</span>. Both cheaper tiers run pythia-70m, so the floor is a budget effect at fixed model size, not a size effect.</p>
         </div>
 
         <figure class="figure reveal">
@@ -298,7 +298,7 @@
           <div class="data-table table-wrap" id="floor-table" hidden></div>
         </figure>
 
-        <div class="callout reveal">Vetting a new reweighter: run it beside Stratified and Group-DRO on a provenance-split pool at the LIGHT budget or above, over three seeds, about 1.1 × 10<sup>17</sup> FLOPs in all. A share that falls with Group-DRO's, as tightly, marks a loss-monotone policy.</div>
+        <div class="callout reveal">Vetting a new reweighter: run it beside Stratified and Group-DRO on a provenance-split pool at the Intermediate budget or above, over three seeds, about 1.1 × 10<sup>17</sup> FLOPs in all. A share that falls with Group-DRO's, as tightly, marks a loss-monotone policy.</div>
       </div>
     </div>
   </section>
@@ -348,7 +348,7 @@
         <figure class="figure reveal">
           <div class="panel">
             <div class="controls">
-              <span class="panel-title" style="margin:0">Final per-domain weight relative to uniform (1/18), HEAVY</span>
+              <span class="panel-title" style="margin:0">Final per-domain weight relative to uniform (1/18), Full tier</span>
               <span class="spacer"></span>
               <button type="button" class="linkbtn" data-table-toggle="heat-table">View as table</button>
             </div>
@@ -369,7 +369,7 @@
         <div class="two-up reveal" style="align-items:start">
           <figure class="figure" style="margin-top:0">
             <div class="panel">
-              <div class="panel-title">Aggregate test loss over 18 domains, HEAVY</div>
+              <div class="panel-title">Aggregate test loss over 18 domains, Full tier</div>
               <div class="panel-sub">Mean ± 1σ (bar), seeds 0, 1, 2 (rings); lower is better</div>
               <div class="chart" id="test-chart"></div>
             </div>
@@ -396,14 +396,14 @@
             <tbody id="budget-body"></tbody>
           </table>
         </div>
-        <p class="small muted" style="margin-top:.8rem">DoGE and Skill-It add one-time estimation surcharges over the HEAVY base: <span class="num">2.37 × 10<sup>17</sup></span> (+3%) and <span class="num">2.87 × 10<sup>17</sup></span> (+25%). The full headline study, 6 methods × 3 seeds, is about <span class="num">4.3 × 10<sup>18</sup></span> FLOPs, each run roughly 435× under a 10<sup>20</sup>-per-run ceiling. All runs used one NVIDIA A100 (80 GB).</p>
+        <p class="small muted" style="margin-top:.8rem">DoGE and Skill-It add one-time estimation surcharges over the Full-tier base: <span class="num">2.37 × 10<sup>17</sup></span> (+3%) and <span class="num">2.87 × 10<sup>17</sup></span> (+25%). The full headline study, 6 methods × 3 seeds, is about <span class="num">4.3 × 10<sup>18</sup></span> FLOPs, each run roughly 435× under a 10<sup>20</sup>-per-run ceiling. All runs used one NVIDIA A100 (80 GB).</p>
 
         <div class="table-wrap" style="margin-top:2.25rem">
           <table>
             <caption>Honest labels. DoGE and Skill-It refer only to faithful implementations; the older validation-loss heuristics live behind a flag and are never given those names.</caption>
             <thead><tr><th>Method</th><th>Status</th><th>Deviations from the original</th></tr></thead>
             <tbody>
-              <tr><td><span class="swatch" style="background:var(--m-aioli)"></span>Aioli</td><td>faithful port</td><td>HEAVY uses a stateful EMA (0.1) path instead of the reference's stateless reset</td></tr>
+              <tr><td><span class="swatch" style="background:var(--m-aioli)"></span>Aioli</td><td>faithful port</td><td>the Full tier uses a stateful EMA (0.1) path instead of the reference's stateless reset</td></tr>
               <tr><td><span class="swatch" style="background:var(--m-doge)"></span>DoGE</td><td>faithful, Alg. 1</td><td>online single model, per-round estimation, mean-abs score scaling</td></tr>
               <tr><td><span class="swatch" style="background:var(--m-skillit)"></span>Skill-It</td><td>faithful, Alg. 1</td><td>continual-pretraining regime, uniform init, mean-abs scaling</td></tr>
               <tr><td><span class="swatch" style="background:var(--m-doremi)"></span>DoReMi-style</td><td>approximate</td><td>validation-shard loss; no max(0,·) clip or c = 10<sup>−3</sup> smoothing; frozen pretrained reference</td></tr>
@@ -426,9 +426,9 @@
         <div class="code"><button class="copy" type="button">Copy</button><pre><span class="k">git</span> clone https://github.com/mixing-floor/compute-floor.git
 <span class="k">cd</span> compute-floor
 <span class="k">pip</span> install -r requirements.txt</pre></div>
-        <div class="code-label">Smoke test · minutes</div>
+        <div class="code-label">Smoke test · Minimal tier (<code class="mono">--config SUPER_LIGHT</code>), minutes</div>
         <div class="code"><button class="copy" type="button">Copy</button><pre><span class="k">python</span> Code/run_experiment.py --config SUPER_LIGHT --seeds 0 --scenario S2_9R_9S --eval-test --out-dir runs/main</pre></div>
-        <div class="code-label">Reported run · HEAVY, 3 seeds</div>
+        <div class="code-label">Reported run · Full tier (<code class="mono">--config HEAVY</code>), 3 seeds</div>
         <div class="code"><button class="copy" type="button">Copy</button><pre><span class="k">python</span> Code/run_experiment.py --config HEAVY --seeds 0 1 2 --scenario S2_9R_9S --eval-test --out-dir runs/main
 <span class="k">python</span> Code/visualize_results.py --out-dir runs/main --fig-dir runs/figures</pre></div>
         <p class="small muted">Compare your <code class="mono">runs/main</code> against the released <a href="https://github.com/mixing-floor/compute-floor/tree/main/Results/main"><code class="mono">Results/main</code></a>. Signal-level diagnostics that log DoGE's gradient inner products, Skill-It's influence graph and Aioli's interaction blocks are in <a href="https://github.com/mixing-floor/compute-floor/tree/main/Results/diagnostics"><code class="mono">Results/diagnostics</code></a>.</p>
